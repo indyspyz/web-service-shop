@@ -1,25 +1,75 @@
 package service
 
-import "github.com/indyspyz/web-service-market/entity"
+import (
+	"github.com/gin-gonic/gin"
 
-type ProductService interface {
-	FindProduct() []entity.Product
-	AddProduct(entity.Product) entity.Product
+	"github.com/indyspyz/web-service-shop/db"
+	"github.com/indyspyz/web-service-shop/entity"
+)
+
+type ProductService struct{}
+
+func (s ProductService) GetAll() ([]entity.Product, error) {
+	db := db.GetDB()
+	var res []entity.Product
+
+	if err := db.Find(&res).Error; err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
-type productService struct {
-	products []entity.Product
+func (s ProductService) Create(ctx *gin.Context) (entity.Product, error) {
+	db := db.GetDB()
+	var res entity.Product
+
+	if err := ctx.BindJSON(&res); err != nil {
+		return res, err
+	}
+
+	if err := db.Create(&res).Error; err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
 
-func NewProduct() ProductService {
-	return &productService{}
+func (s ProductService) GetByID(id string) (entity.Product, error) {
+	db := db.GetDB()
+	var res entity.Product
+
+	if err := db.Where("id = ?", id).First(&res).Error; err != nil {
+		return res, err
+	}
+
+	return res, nil
 }
 
-func (service *productService) AddProduct(product entity.Product) entity.Product {
-	service.products = append(service.products, product)
-	return product
+func (s ProductService) UpdateByID(id string, c *gin.Context) (entity.Product, error) {
+	db := db.GetDB()
+	var res entity.Product
+
+	if err := db.Where("id = ?", id).First(&res).Error; err != nil {
+		return res, err
+	}
+
+	if err := c.BindJSON(&res); err != nil {
+		return res, err
+	}
+
+	db.Save(&res)
+
+	return res, nil
 }
 
-func (service *productService) FindProduct() []entity.Product {
-	return service.products
+func (s ProductService) DeleteByID(id string) error {
+	db := db.GetDB()
+	var res entity.Product
+
+	if err := db.Where("id = ?", id).Delete(&res).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

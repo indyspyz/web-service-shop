@@ -1,33 +1,84 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
-	"github.com/indyspyz/web-service-market/entity"
-	"github.com/indyspyz/web-service-market/service"
+	service "github.com/indyspyz/web-service-shop/service"
 )
 
-type ShopController interface {
-	FindShop() []entity.Shop
-	AddShop(ctx *gin.Context) entity.Shop
-}
+type ShopController struct{}
 
-type shopController struct {
-	service service.ShopService
-}
+func (c ShopController) Index(ctx *gin.Context) {
+	var s service.ShopService
+	p, err := s.GetAll()
 
-func NewShop(service service.ShopService) ShopController {
-	return &shopController{
-		service: service,
+	if err != nil {
+		ctx.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(200, p)
 	}
 }
 
-func (c *shopController) FindShop() []entity.Shop {
-	return c.service.FindShop()
+func (c ShopController) Create(ctx *gin.Context) {
+	var s service.ShopService
+	p, err := s.Create(ctx)
+
+	if err != nil {
+		ctx.AbortWithStatus(400)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(201, p)
+	}
 }
 
-func (c *shopController) AddShop(ctx *gin.Context) entity.Shop {
-	var shop entity.Shop
-	ctx.BindJSON(&shop)
-	c.service.AddShop(shop)
-	return shop
+func (c ShopController) GetById(ctx *gin.Context) {
+	id := ctx.Params.ByName("id")
+	var s service.ShopService
+	p, err := s.GetByID(id)
+
+	if err != nil {
+		ctx.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(200, p)
+	}
+}
+
+func (c ShopController) Update(ctx *gin.Context) {
+	id := ctx.Params.ByName("id")
+	var s service.ShopService
+	p, err := s.UpdateByID(id, ctx)
+
+	if err != nil {
+		ctx.AbortWithStatus(400)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(200, p)
+	}
+}
+
+func (c ShopController) Delete(ctx *gin.Context) {
+	id := ctx.Params.ByName("id")
+	var s service.ShopService
+
+	if err := s.DeleteByID(id); err != nil {
+		ctx.AbortWithStatus(403)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(204, gin.H{"id #" + id: "deleted"})
+	}
+}
+
+func (c ShopController) GetAllProduct(ctx *gin.Context) {
+	var s service.ShopService
+	p, err := s.GetAllProduct()
+
+	if err != nil {
+		ctx.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(200, p)
+	}
 }

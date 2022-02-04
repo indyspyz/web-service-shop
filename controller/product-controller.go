@@ -1,33 +1,72 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
-	"github.com/indyspyz/web-service-market/entity"
-	"github.com/indyspyz/web-service-market/service"
+	service "github.com/indyspyz/web-service-shop/service"
 )
 
-type ProductController interface {
-	FindProduct() []entity.Product
-	AddProduct(ctx *gin.Context) entity.Product
-}
+type ProductController struct{}
 
-type productController struct {
-	service service.ProductService
-}
+func (c ProductController) Index(ctx *gin.Context) {
+	var s service.ProductService
+	p, err := s.GetAll()
 
-func NewProduct(service service.ProductService) ProductController {
-	return &productController{
-		service: service,
+	if err != nil {
+		ctx.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(200, p)
 	}
 }
 
-func (c *productController) FindProduct() []entity.Product {
-	return c.service.FindProduct()
+func (c ProductController) Create(ctx *gin.Context) {
+	var s service.ProductService
+	p, err := s.Create(ctx)
+
+	if err != nil {
+		ctx.AbortWithStatus(400)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(201, p)
+	}
 }
 
-func (c *productController) AddProduct(ctx *gin.Context) entity.Product {
-	var product entity.Product
-	ctx.BindJSON(&product)
-	c.service.AddProduct(product)
-	return product
+func (c ProductController) GetById(ctx *gin.Context) {
+	id := ctx.Params.ByName("id")
+	var s service.ProductService
+	p, err := s.GetByID(id)
+
+	if err != nil {
+		ctx.AbortWithStatus(404)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(200, p)
+	}
+}
+
+func (c ProductController) Update(ctx *gin.Context) {
+	id := ctx.Params.ByName("id")
+	var s service.ProductService
+	p, err := s.UpdateByID(id, ctx)
+
+	if err != nil {
+		ctx.AbortWithStatus(400)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(200, p)
+	}
+}
+
+func (c ProductController) Delete(ctx *gin.Context) {
+	id := ctx.Params.ByName("id")
+	var s service.ProductService
+
+	if err := s.DeleteByID(id); err != nil {
+		ctx.AbortWithStatus(403)
+		fmt.Println(err)
+	} else {
+		ctx.JSON(204, gin.H{"id #" + id: "deleted"})
+	}
 }
